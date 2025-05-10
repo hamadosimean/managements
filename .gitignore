@@ -1,0 +1,14 @@
+.qodo
+.__pycache__
+db.sqlite3
+*.pyc
+*.pyo
+media
+staticfiles
+.env
+.env.dev
+.env.prod
+Pipfile
+Pipfile.lock
+managed_context
+test_suite_analysis

@@ -1,0 +1,44 @@
+version: "3.9"
+services:
+  backend:
+    build: .
+    container_name: managements_backend
+    env_file:
+      - .env.prod
+    expose:
+      - "8000"
+    volumes:
+      - .:/app
+      - static_volumes:/app/static
+      - media_volumes:/app/media
+    command: >
+      sh -c "python3 manage.py makemigrations && 
+      python3 manage.py migrate && 
+      python3 manage.py collectstatic --noinput && 
+      gunicorn -b 0.0.0:8000 --workers 3 --timeout 120  config.wsgi:application"
+    depends_on:
+      - db
+  db:
+    image: postgres:latest
+    container_name: managements_db
+    env_file:
+      - .env.prod
+    volumes:
+      - db_data:/var/lib/postgresql/data
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: managements_nginx
+    restart: unless-stopped
+    volumes:
+      - static_volumes:/app/static
+      - media_volumes:/app/media
+    ports:
+      - "86:80"
+    depends_on:
+      - backend
+volumes:
+  db_data:
+  media_volumes:
+  static_volumes:
