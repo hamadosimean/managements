@@ -1,34 +1,38 @@
-version: "3.9"
 services:
   backend:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
     container_name: managements_backend
     env_file:
-      - .env.prod
+      - ./.env.prod
     expose:
       - "8000"
     volumes:
       - .:/app
-      - static_volumes:/app/static
-      - media_volumes:/app/media
+      - managements_static_volumes:/app/static
+      - managements_media_volumes:/app/media
     command: >
-      sh -c "gunicorn -b 0.0.0:8000 --workers 3 --timeout 120  config.wsgi:application"
+      sh -c "
+      python manage.py migrate &&
+      gunicorn -b 0.0.0.0:8000 --workers 3 --timeout 120 config.wsgi:application"
     depends_on:
-      db:
-        condition: service_healthy
+      - db
+        # condition: service_healthy
 
   db:
-    image: postgres:17
+    image: postgres:15
     container_name: managements_db
     env_file:
-      - .env.prod
+      - ./.env.prod
     volumes:
-      - db_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "${DATABASE_USER}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - managements_db_data:/var/lib/postgresql/data
+    # healthcheck:
+    #   test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 5
+
   nginx:
     build:
       context: ./nginx
@@ -36,13 +40,15 @@ services:
     container_name: managements_nginx
     restart: unless-stopped
     volumes:
-      - static_volumes:/app/static
-      - media_volumes:/app/media
+      - managements_static_volumes:/app/static
+      - managements_media_volumes:/app/media
     ports:
-      - "86:80"
+      - "1156:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_started
+
 volumes:
-  db_data:
-  media_volumes:
-  static_volumes:
+  managements_db_data:
+  managements_media_volumes:
+  managements_static_volumes:

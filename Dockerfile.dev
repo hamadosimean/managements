@@ -1,0 +1,21 @@
+# Base file
+FROM python:3.13-slim
+
+RUN mkdir /app
+# Set the working directory
+WORKDIR /app
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Upgrade pip and install dependencies
+RUN pip install --upgrade pip 
+# Copy the requirements file into the container
+COPY requirements.txt /app/
+# Install the dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+## copy all the rest of the code to current directory
+COPY . .
+# collect static file
+RUN python manage.py collectstatic --noinput
+

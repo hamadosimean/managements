@@ -13,3 +13,6 @@ Pipfile.lock
 managed_context
 test_suite_analysis
 .github
+notes.yml
+
+*migrations
